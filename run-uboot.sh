@@ -1,3 +1,5 @@
+#!/bin/bash
+
 ddr=usbbl2runpara_ddrinit.bin
 fip=usbbl2runpara_runfipimg.bin
 bl2=u-boot.bin.usb.bl2
@@ -8,23 +10,27 @@ ddr_run=0xd9000000
 uboot_load=0x200c000
 uboot_run=0xd9000000
 
+set -xe
+
 ./update cwr $bl2 $ddr_load
 ./update write $ddr $bl2_params
 ./update run $ddr_run
 
-sleep 8
+sleep 1
 
 proto=`./update identify 7 | awk -F- '{print $4}'`
 echo proto $proto
-if [ "$proto" = "8" ] ; then
+if [ "$proto" -eq 8 ] ; then
 	./update run $bl2_params
 fi
+
+sleep 1
 
 ./update write "$bl2" $ddr_load
 ./update write "$fip" $bl2_params # tell bl2 to jump to tpl, aka u-boot
 ./update write "$tpl" $uboot_load
 
-if [ "$proto" = "8" ] ; then
+if [ "$proto" -eq 8 ] ; then
 	./update run $bl2_params
 else
 	./update run $uboot_run
